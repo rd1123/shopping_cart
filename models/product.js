@@ -7,7 +7,20 @@ module.exports = (sequelize, DataTypes) => {
     image: DataTypes.STRING
   }, {});
   Product.associate = function (models) {
-    // associations can be defined here
+    Product.belongsToMany(models.Cart, {
+      as: 'carts',
+      through: {
+        model: models.CartItem,
+        unique: false
+      }
+    })
+    Product.belongsToMany(models.Order, {
+      as: 'orders',
+      through: {
+        model: models.OrderItem,
+        unique: false
+      }
+    })
   };
   return Product;
 }; 
