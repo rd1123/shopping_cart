@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+const session = require('express-session')
 const exphbs = require('express-handlebars')
 
 var app = express();
@@ -18,11 +19,17 @@ app.engine('.hbs', exphbs({
   defaultLayout: 'main',
   helpers: require('./config/handlebars-helpers')
 }))
-
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(session({
+  secret: 'rd',
+  name: 'rd',
+  cookie: { maxAge: 80000 },
+  resave: false,
+  saveUninitialized: true
+}))
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
