@@ -14,6 +14,7 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    return queryInterface.bulkDelete('CartItems')
+    const option = { truncate: true, restartIdentity: true }
+    return queryInterface.bulkDelete('CartItems', null, option)
   }
 };
