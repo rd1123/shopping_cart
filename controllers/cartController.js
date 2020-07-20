@@ -21,67 +21,22 @@ let cartController = {
   postCart: async (req, res) => {
     try {
       let [cart, created] = await Cart.findOrCreate({ where: { id: req.session.cartId || 0 } })
-      // let cartItem = await CartItem.findOrCreate({
-      // where: { CartId: cart[0].id, ProductId: req.body.productId },
-      // default: { CartId: cart[0].id, ProductId: req.body.productId }
-      // })
-      console.log('cart', cart)
-      console.log('created', created)
-      // console.log('cartItem', cartItem)
+      let [cartItem, itemcreated] = await CartItem.findOrCreate({
+        where: { CartId: cart.id, ProductId: req.body.productId },
+        default: { CartId: cart.id, ProductId: req.body.productId }
+      })
+      cartItem.update({
+        quantity: (cartItem.quantity || 0) + 1
+      }).then(cartitem => {
+        req.session.cartId = cart.id
+        return req.session.save(() => {
+          return res.redirect('back')
+        })
+      })
     } catch (err) {
       return res.json({ status: 'error', message: 'not working yo' })
     }
-    // .then((cart) => {
-    //   return CartItem.findOrCreate({
-    //     where: {
-    //       CartId: cart[0].id,
-    //       ProductId: req.body.productId
-    //     },
-    //     default: {
-    //       CartId: cart[0].id,
-    //       ProductId: req.body.productId,
-    //     },
-    //   }).then((cartItem) => {
-    //     return cartItem[0].update({
-    //       quantity: (cartItem[0].quantity || 0) + 1,
-    //     })
-    //       .then((cartItem) => {
-    //         req.session.cartId = cart[0].id
-    //         return req.session.save(() => {
-    //           return res.redirect('back')
-    //         })
-    //       })
-    //   })
-    // });
   },
-  // postCart: (req, res) => {
-  //   return Cart.findOrCreate({
-  //     where: {
-  //       id: req.session.cartId || 0,
-  //     },
-  //   }).then((cart) => {
-  //     return CartItem.findOrCreate({
-  //       where: {
-  //         CartId: cart[0].id,
-  //         ProductId: req.body.productId
-  //       },
-  //       default: {
-  //         CartId: cart[0].id,
-  //         ProductId: req.body.productId,
-  //       },
-  //     }).then((cartItem) => {
-  //       return cartItem[0].update({
-  //         quantity: (cartItem[0].quantity || 0) + 1,
-  //       })
-  //         .then((cartItem) => {
-  //           req.session.cartId = cart[0].id
-  //           return req.session.save(() => {
-  //             return res.redirect('back')
-  //           })
-  //         })
-  //     })
-  //   });
-  // },
 }
 
 module.exports = cartController
