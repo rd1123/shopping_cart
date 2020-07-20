@@ -7,6 +7,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 const session = require('express-session')
 const exphbs = require('express-handlebars')
+const methodOverride = require('method-override')
 
 var app = express();
 
@@ -31,6 +32,7 @@ app.use(session({
   saveUninitialized: true
 }))
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(methodOverride('_method'))
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);

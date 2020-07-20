@@ -37,6 +37,28 @@ let cartController = {
       return res.json({ status: 'error', message: 'not working yo' })
     }
   },
+  addCartItem: async (req, res) => {
+    let cartItem = await CartItem.findByPk(req.params.id)
+    cartItem.update({
+      quantity: Number(cartItem.quantity) + 1
+    }).then(cartItem => {
+      return res.redirect('back')
+    })
+  },
+  subCartItem: async (req, res) => {
+    let cartItem = await CartItem.findByPk(req.params.id)
+    cartItem.update({
+      quantity: Number(cartItem.quantity) - 1 >= 1 ? Number(cartItem.quantity) - 1 : 1
+    }).then(cartItem => {
+      return res.redirect('back')
+    })
+  },
+  deleteCartItem: async (req, res) => {
+    let cartItem = await CartItem.findByPk(req.params.id)
+    cartItem.destroy().then(cartItem => {
+      return res.redirect('back')
+    })
+  }
 }
 
 module.exports = cartController
