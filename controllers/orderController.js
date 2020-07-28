@@ -2,8 +2,7 @@ const db = require('../models')
 const Order = db.Order
 const OrderItem = db.OrderItem
 const Product = db.Product
-
-
+const Cart = db.Cart
 
 let orderController = {
   getOrders: async (req, res) => {
@@ -16,10 +15,49 @@ let orderController = {
     }
   },
   postOrder: async (req, res) => {
-    console.log('y')
+    try {
+      let cart = await Cart.findByPk(req.body.cartId, { include: 'items' })
+      Order.create({
+        name: req.body.name,
+        address: req.body.address,
+        phone: req.body.phone,
+        shipping_status: req.body.shipping_status,
+        payment_status: req.body.payment_status,
+        amount: req.body.amount
+      }).then(order => {
+        let results = []
+        for (let i = 0; i < cart.items.length; i++) {
+          console.log('cart items', cart.items[i])
+          console.log('CartItem', cart.items[i].CartItem)
+          results.push(
+            OrderItem.create({
+              OrderId: order.id,
+              ProductId: cart.items[i].id,
+              price: cart.items[i].price,
+              quantity: cart.items[i].CartItem.quantity
+            })
+          )
+        }
+        return Promise.all(results).then(() => {
+          res.redirect('/orders')
+        })
+      })
+    } catch {
+      return res.json('error')
+    }
   },
   cancelOrder: async (req, res) => {
-    console.log('n')
+    try {
+      let order = await Order.findByPk(req.params.id)
+      order.update({
+        ...req.body,
+        shipping_status: '-1',
+        payment_status: '-1'
+      })
+      return res.redirect('back')
+    } catch {
+      return res.json('error')
+    }
   }
 }
 
