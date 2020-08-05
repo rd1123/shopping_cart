@@ -8,7 +8,7 @@ let orderController = {
   getOrders: async (req, res) => {
     try {
       let orders = await Order.findAll({ include: 'items' })
-      orders = orders.map(d => ({ ...d.dataValues }))
+      orders = orders.map(d => (d.get({ plain: true })))
       return res.render('orders', { orders })
     } catch {
       return res.json('error')
@@ -27,8 +27,6 @@ let orderController = {
       }).then(order => {
         let results = []
         for (let i = 0; i < cart.items.length; i++) {
-          console.log('cart items', cart.items[i])
-          console.log('CartItem', cart.items[i].CartItem)
           results.push(
             OrderItem.create({
               OrderId: order.id,
@@ -38,6 +36,8 @@ let orderController = {
             })
           )
         }
+        cart.destroy()
+
         return Promise.all(results).then(() => {
           res.redirect('/orders')
         })

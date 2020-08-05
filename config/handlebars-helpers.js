@@ -4,5 +4,8 @@ module.exports = {
       return options.fn(this)
     }
     return options.inverse(this)
+  },
+  toJson: function (obj) {
+    return JSON.stringify(obj, null, 4)
   }
 }
