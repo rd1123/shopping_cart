@@ -58,6 +58,19 @@ let orderController = {
     } catch {
       return res.json('error')
     }
+  },
+  getPayment: async (req, res) => {
+    console.log('===== getPayment =====')
+    console.log(req.params.id)
+    console.log('==============')
+    const order = (await Order.findByPk(req.params.id)).get({ plain: true })
+    return res.render('payment', { order })
+  },
+  newebpayCallback: async (req, res) => {
+    console.log('===== newebpayCallback =====')
+    console.log(req.body)
+    console.log('==========')
+    return res.redirect('back')
   }
 }
 
