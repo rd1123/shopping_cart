@@ -1,5 +1,5 @@
 const db = require('../models')
-const crypto = require('crypto')
+
 const Order = db.Order
 const OrderItem = db.OrderItem
 const Product = db.Product
@@ -62,9 +62,19 @@ let orderController = {
     }
   },
   getPayment: async (req, res) => {
-    const order = (await Order.findByPk(req.params.id)).get({ plain: true })
-    const tradeInfo = encryptService.getTradeInfo(order.amount, '產品名稱', 'rdding1123@gmail.com')
-    return res.render('payment', { order, tradeInfo })
+    try {
+      let order = await Order.findByPk(req.params.id)
+      const tradeInfo = await encryptService.getTradeInfo(order.amount, '產品名稱', 'rdding1123@gmail.com')
+
+      order.update({
+        ...req.body,
+        sn: tradeInfo.MerchantOrderNo
+      })
+      return res.render('payment', { order: order.get({ plain: true }), tradeInfo })
+    } catch {
+      return res.json({ 'error': '' })
+    }
+
   },
   newebpayCallback: async (req, res) => {
     console.log('===== newebpayCallback =====')
@@ -72,6 +82,17 @@ let orderController = {
     console.log(req.query)
     console.log(req.body)
     console.log('==========')
+
+    const data = JSON.parse(encryptService.create_mpg_aes_decrypt(req.body.TradeInfo))
+    console.log('===== newebpayCallback: create_mpg_aes_decrypt、data =====')
+    console.log(data)
+
+    let orders = await Order.findAll({ where: { sn: data['Result']['MerchantOrderNo'] } })
+
+    orders[0].update({
+      ...req.body,
+      payment_status: 1
+    })
 
     return res.redirect('/orders')
   }

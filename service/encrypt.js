@@ -1,31 +1,35 @@
-const URL = 'https://77a3e9e97f10.ngrok.io'
-const MerchantID = 'MS313593478'
-const HashKey = 'nEOoEbDGjGovRn1m4DgxtDCM0zpPXeH7'
-const HashIV = 'CP9oYrpu3jaEfx8P'
+const crypto = require('crypto')
+require('dotenv').config()
+
+const URL = process.env.URL
+const MerchantID = process.env.MERCHANT_ID
+const HashKey = process.env.HASHKEY
+const HashIV = process.env.HASHIV
 const PayGateWay = "https://ccore.newebpay.com/MPG/mpg_gateway"
 const ReturnURL = URL + "/newebpay/callback?from=ReturnURL"
 const NotifyURL = URL + "/newebpay/callback?from=NotifyURL"
 const ClientBackURL = URL + "/orders"
 
 let encryptService = {
-  genDataChain: (TradeInfo) => {
-    let results = []
-    for (let kv of Object.entries(TradeInfo)) {
-      results.push(`${kv[0]}=${kv[1]}`)
+  getTradeInfo: (Amt, Desc, email) => {
+    function genDataChain(TradeInfo) {
+      let results = []
+      for (let kv of Object.entries(TradeInfo)) {
+        results.push(`${kv[0]}=${kv[1]}`)
+      }
+      return results.join('&')
     }
-    return results.join('&')
-  },
-  create_mpg_aes_encrypt: (TradeInfo) => {
-    let encrypt = crypto.createCipheriv('aes256', HashKey, HashIV)
-    let enc = encrypt.update(genDataChain(TradeInfo), 'utf8', 'hex')
-    return enc + encrypt.final('hex')
-  },
-  create_mpg_sha_encrypt: (TradeInfo) => {
-    let sha = crypto.createHash('sha256')
-    let plainText = `HashKey=${HashKey}&${TradeInfo}&HashIV=${HashIV}`
-    return sha.update(plainText).digest('hex').toUpperCase()
-  }
-getTradeInfo: (Amt, Desc, email) => {
+    function create_mpg_aes_encrypt(TradeInfo) {
+      let encrypt = crypto.createCipheriv('aes256', HashKey, HashIV)
+      let enc = encrypt.update(genDataChain(TradeInfo), 'utf8', 'hex')
+      return enc + encrypt.final('hex')
+    }
+    function create_mpg_sha_encrypt(TradeInfo) {
+      let sha = crypto.createHash('sha256')
+      let plainText = `HashKey=${HashKey}&${TradeInfo}&HashIV=${HashIV}`
+      return sha.update(plainText).digest('hex').toUpperCase()
+    }
+
 
     data = {
       'MerchantID': MerchantID, // 商店代號
@@ -56,6 +60,14 @@ getTradeInfo: (Amt, Desc, email) => {
     }
 
     return tradeInfo
+  },
+  create_mpg_aes_decrypt: (TradeInfo) => {
+    let decrypt = crypto.createDecipheriv('aes256', HashKey, HashIV)
+    decrypt.setAutoPadding(false)
+    let text = decrypt.update(TradeInfo, 'hex', 'utf8')
+    let plainText = text + decrypt.final('utf8')
+    let result = plainText.replace(/[\x00-\x20]+/g, '')
+    return result
   }
 }
 module.exports = encryptService
