@@ -51,11 +51,8 @@ let orderController = {
   cancelOrder: async (req, res) => {
     try {
       let order = await Order.findByPk(req.params.id)
-      order.update({
-        ...req.body,
-        shipping_status: '-1',
-        payment_status: '-1'
-      })
+      order.destroy()
+
       return res.redirect('back')
     } catch {
       return res.json('error')
