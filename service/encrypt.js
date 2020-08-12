@@ -1,33 +1,33 @@
-const crypto = require('crypto')
-require('dotenv').config()
+const crypto = require('crypto');
+require('dotenv').config();
 
-const URL = process.env.URL
-const MerchantID = process.env.MERCHANT_ID
-const HashKey = process.env.HASHKEY
-const HashIV = process.env.HASHIV
-const PayGateWay = "https://ccore.newebpay.com/MPG/mpg_gateway"
-const ReturnURL = URL + "/newebpay/callback?from=ReturnURL"
-const NotifyURL = URL + "/newebpay/callback?from=NotifyURL"
-const ClientBackURL = URL + "/orders"
+const URL = process.env.URL;
+const MerchantID = process.env.MERCHANT_ID;
+const HashKey = process.env.HASHKEY;
+const HashIV = process.env.HASHIV;
+const PayGateWay = "https://ccore.newebpay.com/MPG/mpg_gateway";
+const ReturnURL = URL + "/newebpay/callback?from=ReturnURL";
+const NotifyURL = URL + "/newebpay/callback?from=NotifyURL";
+const ClientBackURL = URL + "/orders";
 
 let encryptService = {
   getTradeInfo: (Amt, Desc, email) => {
     function genDataChain(TradeInfo) {
-      let results = []
+      let results = [];
       for (let kv of Object.entries(TradeInfo)) {
-        results.push(`${kv[0]}=${kv[1]}`)
+        results.push(`${kv[0]}=${kv[1]}`);
       }
-      return results.join('&')
+      return results.join('&');
     }
     function create_mpg_aes_encrypt(TradeInfo) {
-      let encrypt = crypto.createCipheriv('aes256', HashKey, HashIV)
-      let enc = encrypt.update(genDataChain(TradeInfo), 'utf8', 'hex')
-      return enc + encrypt.final('hex')
+      let encrypt = crypto.createCipheriv('aes256', HashKey, HashIV);
+      let enc = encrypt.update(genDataChain(TradeInfo), 'utf8', 'hex');
+      return enc + encrypt.final('hex');
     }
     function create_mpg_sha_encrypt(TradeInfo) {
-      let sha = crypto.createHash('sha256')
-      let plainText = `HashKey=${HashKey}&${TradeInfo}&HashIV=${HashIV}`
-      return sha.update(plainText).digest('hex').toUpperCase()
+      let sha = crypto.createHash('sha256');
+      let plainText = `HashKey=${HashKey}&${TradeInfo}&HashIV=${HashIV}`;
+      return sha.update(plainText).digest('hex').toUpperCase();
     }
 
 
@@ -45,10 +45,10 @@ let encryptService = {
       'ReturnURL': ReturnURL, // 支付完成返回商店網址
       'NotifyURL': NotifyURL, // 支付通知網址/每期授權結果通知
       'ClientBackURL': ClientBackURL, // 支付取消返回商店網址
-    }
+    };
 
-    mpg_aes_encrypt = create_mpg_aes_encrypt(data)
-    mpg_sha_encrypt = create_mpg_sha_encrypt(mpg_aes_encrypt)
+    mpg_aes_encrypt = create_mpg_aes_encrypt(data);
+    mpg_sha_encrypt = create_mpg_sha_encrypt(mpg_aes_encrypt);
 
     tradeInfo = {
       'MerchantID': MerchantID, // 商店代號
@@ -57,17 +57,17 @@ let encryptService = {
       'Version': 1.5, // 串接程式版本
       'PayGateWay': PayGateWay,
       'MerchantOrderNo': data.MerchantOrderNo,
-    }
+    };
 
-    return tradeInfo
+    return tradeInfo;
   },
   create_mpg_aes_decrypt: (TradeInfo) => {
-    let decrypt = crypto.createDecipheriv('aes256', HashKey, HashIV)
-    decrypt.setAutoPadding(false)
-    let text = decrypt.update(TradeInfo, 'hex', 'utf8')
-    let plainText = text + decrypt.final('utf8')
-    let result = plainText.replace(/[\x00-\x20]+/g, '')
-    return result
+    let decrypt = crypto.createDecipheriv('aes256', HashKey, HashIV);
+    decrypt.setAutoPadding(false);
+    let text = decrypt.update(TradeInfo, 'hex', 'utf8');
+    let plainText = text + decrypt.final('utf8');
+    let result = plainText.replace(/[\x00-\x20]+/g, '');
+    return result;
   }
 }
-module.exports = encryptService
+module.exports = encryptService;
